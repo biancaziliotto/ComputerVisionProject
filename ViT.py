@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+from keras import layers
 import matplotlib.pyplot as plt
 
 class Patches(layers.Layer):
@@ -20,3 +21,4 @@ class Patches(layers.Layer):
         patch_dims = patches.shape[-1]
         patches = tf.reshape(patches, [batch_size, -1, patch_dims])
         return patches
+    
