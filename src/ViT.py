@@ -5,7 +5,7 @@ from tensorflow import keras
 import tensorflow_addons as tfa
 from keras import layers
 import matplotlib.pyplot as plt
-from src.BuildingBlocks import *
+from ..src.BuildingBlocks import *
 
 class ViT_classifier:
 
