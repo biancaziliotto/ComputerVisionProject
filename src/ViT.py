@@ -13,6 +13,8 @@ class ViT_classifier:
 
         self.learning_rate = params["learning_rate"]
         self.weight_decay = params["weight_decay"]
+        self.MLP_dropout_rate = params["MLP_dropout_rate"]
+        self.TB_dropout_rate = params["TB_dropout_rate"]
         self.batch_size = params["batch_size"]
         self.num_epochs = params["num_epochs"]
         self.input_shape = params["input_shape"]
@@ -34,11 +36,11 @@ class ViT_classifier:
         # Create patches.
         patches= Patches(self.patch_size)(augmented)
         # Encode patches.
-        encoded_patches= PatchEncoder(self.num_patches, self.projection_dim)(patches)
+        encoded_patches = PatchEncoder(self.num_patches, self.projection_dim)(patches)
 
         # Multiple Transformer Blocks.
         for _ in range(self.transformer_layers):
-            encoded_patches = TransformerBlock(self.num_heads, self.projection_dim, self.transformer_units)(x = encoded_patches)
+            encoded_patches = TransformerBlock(self.num_heads, self.projection_dim, self.transformer_units, self.TB_dropout_rate)(x = encoded_patches)
 
         # Create a [batch_size, projection_dim] tensor.
         representation = layers.LayerNormalization(epsilon=1e-6)(encoded_patches)
@@ -46,14 +48,15 @@ class ViT_classifier:
         representation = layers.Dropout(0.5)(representation)
 
         # Add MLP.
-        features = MLP(representation, hidden_units = self.mlp_head_units, dropout_rate=0.5)
+        features = MLP(representation, hidden_units = self.mlp_head_units, dropout_rate=self.MLP_dropout_rate)
         # Classify outputs.
         logits = layers.Dense(self.num_classes)(features)
         # Create the Keras model.
         self.model = keras.Model(inputs=inputs, outputs=logits)
 
     def __call__(self, x):
-        return self.model(x)
+        y_pred = np.argmax(self.model(x), axis=1)
+        return y_pred
     
     def train(self, x_train, x_test, y_train, y_test):
 

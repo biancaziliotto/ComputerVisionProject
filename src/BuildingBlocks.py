@@ -58,24 +58,25 @@ class PatchEncoder(layers.Layer):
     
 class TransformerBlock():
 
-    def __init__(self, num_heads, projection_dim, transformer_units):
+    def __init__(self, num_heads, projection_dim, transformer_units, TB_dropout_rate):
         self.num_heads = num_heads
         self.projection_dim = projection_dim
         self.transformer_units = transformer_units
+        self.dropout_rate = TB_dropout_rate
 
     def __call__(self, x):
         # Layer normalization 1.
         x1 = layers.LayerNormalization(epsilon=1e-6)(x)
         # Create a multi-head attention layer.
         attention_output = layers.MultiHeadAttention(
-            num_heads=self.num_heads, key_dim=self.projection_dim, dropout=0.1
+            num_heads=self.num_heads, key_dim=self.projection_dim, dropout=self.dropout_rate
         )(x1, x1)
         # Skip connection 1.
         x2 = layers.Add()([attention_output, x])
         # Layer normalization 2.
         x3 = layers.LayerNormalization(epsilon=1e-6)(x2)
         # MLP.
-        x3 = MLP(x3, hidden_units=self.transformer_units, dropout_rate=0.1)
+        x3 = MLP(x3, hidden_units=self.transformer_units, dropout_rate=self.dropout_rate)
         # Skip connection 2.
         x = layers.Add()([x3, x2])
         return x
